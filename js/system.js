@@ -113,44 +113,59 @@ function stats(term) {
         basicEcho('You currently have no weapon equipped', term);
     }
 };
+/*
+	Purpose: general tutor for items in an array using 3-case system, returns index of found thing
+	SIDE EFFECTS: Prints failure to find cases to console
+	RETURNS: index of found thing, -1 if thing not found, -2 if either first two cases trigger
+	NOTES: named is an optional parameter so tutor can work with arrays of objects with names or arrays of strings
+*/
+function tutor(term, args, things, r1, r2, named = true) {
+	var ls = things
+	if(named) {
+		ls = things.map(x => x.name);
+	}
+	if(ls.length < 1) {
+		basicEcho(r1, term);
+		return -2;
+	}
+	//Case 2: no additional arguements supplied with command
+	else if(args === '') {
+		basicEcho(r2, term);
+		for(i = 0; i < ls.length; i++) {
+			basicEcho(ls[i], term);
+		}
+		return -2;
+	}
+	else {
+		for(i = 0; i < ls.length; i++) {
+			var thingName = ls[i];
+			if(thingName.toUpperCase() === args.toUpperCase()) {
+				return i;
+			}
+		}
+		return -1;
+	}
+};
 
 /*
 	PURPOSE: Allows player to inspect items in the room and if possible, add them to Player's collection
 	SIDE EFFECTS: Adding items to Player's backpack
 */
 function inspect(term, args) {
-	//This function is broken up into Cases:
 	var things = curRoom.items;
-	//Case 1: The room has no items in it
-	if(things.length < 1) {
-		basicEcho('There\'s nothing worth investigating here', term);
-	}
-	//Case 2: There were no additional arguments supplied with 'inspect' so function will list all Items in the room
-	else if(args === '') {
-		term.echo('You see: ');
-		for(i = 0; i < things.length; i++) {
-			term.echo(things[i].name, {keepWords: true});
+	var r1 = "There\'s nothing worth investigating here";
+	var r2 = 'You see: ';
+	var index = tutor(term, args, things, r1, r2);
+	if(index > -1) {
+		basicEcho(things[index].desc, term);
+		if(things[index].takeable) {
+			basicEcho('You put the ' + things[index].name + ' into your bag for later.', term);
+			player.backpack.push(things[index]);
+			things.splice(index, 1);
 		}
 	}
-	//Case 3: Checks to see if room contains Item named by @args, if not returns a simple message
-	//if it is in room, displays description and tries to take item
-	else {
-		var exists = false;
-		for(i = 0; i < things.length; i++) {
-			var thingName = things[i].name;
-			if(thingName.toUpperCase() === args.toUpperCase()) {
-				basicEcho(things[i].desc, term);
-				exists = true;
-				if(things[i].takeable) {
-					basicEcho('You put the ' + thingName + ' into your bag for later.', term);
-					player.backpack.push(things[i]);
-					things.splice(i,1);
-				}
-			}
-		}
-		if(!exists){
-			term.echo(args + ' isn\'t in this room', {keepWords: true});
-		}
+	else if(index > -2) {
+		basicEcho(args + ' isn\'t in this room', term);
 	}
 };
 /*
@@ -159,43 +174,29 @@ function inspect(term, args) {
 */
 function use(term, args) {
 	var things = player.backpack;
-	//Case 1:Player backpack is empty
-	if(things.length < 1) {
-		term.echo('There\'s nothing in your backpack');
-	}
-	//Case 2: There were no additional arguments supplied with 'use' so function will list all backpack items
-	else if(args == '') {
-		term.echo('You rummage around and find: ');
-		for(i = 0; i < things.length; i++) {
-			term.echo(things[i].name);
-		}
-		term.echo('Maybe one can be of use?');
-	}
-	//Case 3: Checks to see if backpack contains item named by @args, if not returns a standard message
-    else {
-        var itemIndex = (containsItem(args));
-        //if item exists in backpack...
-        if(itemIndex >= 0) {
-            var curItem = things[itemIndex];
-            if(!curItem.isWeapon) {
-                if(curItem.cond()) {
-                    curItem.use(term);
-                    curItem.durability--;
-                    if(curItem.durability <= 0){
-                        player.backpack.splice(i, 1);
-                    }
-                }
-                else{
-                    basicEcho('That\'s not useful right now!', term);
+	var r1 = "There\'s nothing in your backpack";
+	var r2 = "You rummage around and find: ";
+	var index = tutor(term, args, things, r1, r2);
+	if(index > -1) {
+		var curItem = things[index];
+        if(!curItem.isWeapon) {
+            if(curItem.cond()) {
+                curItem.use(term);
+                curItem.durability--;
+                if(curItem.durability <= 0){
+                    player.backpack.splice(index, 1);
                 }
             }
-            else {
-                basicEcho('That\'s a weapon, not a usable item!', term);
+            else{
+                basicEcho('That\'s not useful right now!', term);
             }
         }
         else {
-            basicEcho('You don\'t have any ' + args + ' in your backpack', term);
+            basicEcho('That\'s a weapon, not a usable item!', term);
         }
+	}
+	else if(index > -2) {
+        basicEcho('You don\'t have any ' + args + ' in your backpack', term);
     }
 };
 /*
@@ -203,164 +204,101 @@ function use(term, args) {
 */
 function drop(term, args) {
 	var things = player.backpack;
-	//Case 1:Player backpack is empty
-	if(things.length < 1) {
-		term.echo('There\'s nothing in your backpack to remove');
+	var r1 = 'There\'s nothing in your backpack to remove';
+	var r2 = 'You rummage around and find: ';
+	var index = tutor(term, args, things, r1, r2);
+	if(index > -1) {
+		var curItem = things[index];
+        things.splice(index, 1);
+        //attempt to drop item into room you're in
+        curRoom.items.push(curItem)
+        basicEcho('You dropped '+curItem.name+' from your backpack, hope you don\'t need it!', term);
 	}
-	//Case 2: There were no additional arguments supplied with 'use' so function will list all backpack items
-	else if(args == '') {
-		term.echo('You rummage around and find: ');
-		for(i = 0; i < things.length; i++) {
-			term.echo(things[i].name);
-		}
-		term.echo('Did you want to remove one of those?');
-	}
-	//Case 3: Checks to see if backpack contains item named by @args, if not returns a standard message
-	else {
-        var itemIndex = (containsItem(args));
-        //if item exists in backpack...
-        if(itemIndex >= 0) {
-            var curItem = things[itemIndex];
-            player.backpack.splice(itemIndex, 1);
-            basicEcho('You dropped '+curItem.name+' from your backpack, hope you don\'t need it!', term);
-                
-        }
-		else {
-			term.echo('You don\'t have any ' + args + ' in your backpack');
-		}
+	else if(index > -2) {
+		basicEcho('You don\'t have any ' +args+ ' in your backpack to drop', term);
 	}
 };
+
 /*
     PURPOSE: Allows player to traverse between rooms, based on unique array of connections from curRoom
 */
 function go(term, args) {
     var options = curRoom.directions;
     var places = curRoom.connections;
-    //Case 1:No directions from current room
-    if(options.length < 1) {
-        basicEcho('It would appear...there isn\'t anywhere to go from here', term);
+    var r1 = "It would appear...there isn\'t anywhere to go from here";
+    var r2 = "You can go: ";
+    var index = tutor(term, args, options, r1, r2, false);
+    if(index > -1) {
+    	var place = places[index];
+    	loadRoom(place);
+    	basicEcho(place.desc, term);
     }
-    //Case 2:No specific direction connected to command
-    else if(args == '') {
-        basicEcho('You can go: ', term);
-        for(var i = 0; i < options.length; i++) {
-            basicEcho(options[i] + " ", term);
-        }
-    }
-    //Case 3:specific direction was mentioned
-    else {
-        var exists = false;
-        for(var i = 0; i < options.length; i++){
-            var optionName = options[i];
-            var place = curRoom.connections[i];
-            if(optionName.toUpperCase() === args.toUpperCase()) {
-                exists = true;
-                loadRoom(place);
-                basicEcho(place.desc, term);
-            }
-        }
-        if(!exists) {
-            basicEcho('To go '+args+' isn\'t an option in this room...', term);
-        }
+    else if(index > -2) {
+    	basicEcho('To go '+args+' isn\'t an option in this room...', term);
     }
 };
+
 /* PURPOSE: Takes an item that is in your backpack and isWeapon and equips it to player
 	SIDE-EFFECTS: Changes player character
 */
 function equip(term, args) {
-	var things = player.backpack;
-	//Case 1:Player backpack is empty
-	if(things.length < 1) {
-		term.echo('There\'s nothing in your backpack to equip');
-	}
-	//Case 2: There were no additional arguments supplied with 'equip' so function will list all backpack items that are weapons
-	else if(args == '') {
-		term.echo('You are currently carrying: ');
-		for(i = 0; i < things.length; i++) {
-			if(things[i].isWeapon) {
-				term.echo(things[i].name);
-			}			
-		}
-		term.echo('Maybe one of these would be a good weapon?');
-	}
-	//Case 3: Checks to see if backpack contains weapon named by @args, if not returns a standard message
-	else {
-        var itemIndex = (containsItem(args));
-        if(itemIndex >= 0) {
-            var curItem = things[itemIndex];
-            if(curItem.isWeapon) {
-                if(player.equip && curItem.name == player.equip.name.toUpperCase()){
-                    term.echo('You already have that equipped!');
-                }
-                else {
-                    player.equip = curItem;
-                    term.echo('You equipped the '+curItem.name);
-                }				
-            }
-            else {
-                term.echo('That\'s not a weapon!');
-            }
+	var options = player.backpack.filter(item => item.isWeapon);
+	//const result = words.filter(word => word.length > 6);
+	var r1 = "There\'s nothing in your backpack to equip";
+	var r2 = 'You are currently carrying these weapons: ';
+	var index = tutor(term, args, options, r1, r2);
+	if(index > -1) {
+		var curItem = options[index];
+        if(player.equip && curItem.name == player.equip.name.toUpperCase()){
+            term.echo('You already have that equipped!');
         }
-		else {
-			term.echo('You don\'t have any ' + args + ' in your backpack');
-		}
+        else {
+            player.equip = curItem;
+            term.echo('You equipped the '+curItem.name);
+        }				
 	}
+	else if(index > -2){
+		term.echo('You don\'t have any ' + args + ' in your arsenal');
+	}
+	
 };
 /* PURPOSE: Very simple combat where all attacks start with you, and you can run away at any time */
 function attack(term, args) {
 	var roomEnemies = curRoom.enemies;
-	//Case 1:No enemies in the room
-	if(player.equip){
-		if(roomEnemies.length < 1) {
-			term.echo('There\'s nothing worth fighting here...');
-		}
-		//Case 2: There were no additional arguments supplied with 'attack' so function will list all enemies in the room
-		else if(args == '') {
-			term.echo('You scan the area and see: ');
-			for(i = 0; i < roomEnemies.length; i++) {
-				term.echo(roomEnemies[i].name);			
-			}
-		}
-		//Case 3: Checks to see if room contains enemy named by @args, if not returns a standard message
-		else {
-			var exists = false;
-			for(i = 0; i < roomEnemies.length; i++) {
-				var thingName = roomEnemies[i].name.toUpperCase();
-				if(thingName == args.toUpperCase()) {
-					exists = true;
-					var thisEnemy = roomEnemies[i];
-					//strength of weapon + modifier based on player's sanity
-					var attackPower = getAttackStrength();
-					term.echo('You attacked the '+thisEnemy.name+' for '+attackPower+' damage!');
-					term.echo('The '+thisEnemy.name+' attacked you for '+thisEnemy.attack+' damage!');				
-					thisEnemy.health -= attackPower;
-					player.health -= thisEnemy.attack;
-					if(thisEnemy.health <= 0){
-						term.echo('You killed the '+thisEnemy.name+'!');
-						roomEnemies.splice(i,1);
-						//basic loot-dropping action...
-						if(thisEnemy.loot) {
-							//special case for if loot required
-							if(thisEnemy.isReq) {
-								lootDrop(thisEnemy.loot, 1, term);
-							}
-							else {
-								lootDrop(thisEnemy.loot, 2, term);
-							}							
-						}
+	var r1 = 'There\'s nothing worth fighting here...';
+	var r2 = 'You scan the area and see: ';
+	if(player.equip) {
+		var index = tutor(term, args, roomEnemies, r1, r2);
+		if(index > -1) {
+			var thisEnemy = roomEnemies[index];
+			//strength of weapon + modifier based on player's sanity
+			var attackPower = getAttackStrength();
+			term.echo('You attacked the '+thisEnemy.name+' for '+attackPower+' damage!');
+			term.echo('The '+thisEnemy.name+' attacked you for '+thisEnemy.attack+' damage!');				
+			thisEnemy.health -= attackPower;
+			player.health -= thisEnemy.attack;
+			if(thisEnemy.health <= 0){
+				term.echo('You killed the '+thisEnemy.name+'!');
+				roomEnemies.splice(i,1);
+				//basic loot-dropping action...
+				if(thisEnemy.loot) {
+					//special case for if loot required
+					if(thisEnemy.isReq) {
+						lootDrop(thisEnemy.loot, 1, term);
 					}
-					
+					else {
+						lootDrop(thisEnemy.loot, 2, term);
+					}							
 				}
 			}
-			if(!exists) {
-				term.echo('There are no enemies by that name here');
-			}
+		}
+		else if(index > -2) {	
+			term.echo('There are no enemies by that name here');	
 		}
 	}
-	else{
+	else {
 		term.echo('You don\'t have a weapon equipped!');
 	}
-	
 };
 //given an array of possible loot options from enemy, and odds of drop returns a loot if odds met
 function lootDrop(possibilities, odds, term) {
@@ -454,52 +392,7 @@ function parseInput(input) {
 	}
 	return arguments.join(" ");
 };
-/*
-	system action for checking backpack for item. useful for npcs
-*/
-function hasItem(itemName) {
-	return rummageBackpack(itemName, false);
-}
 
-/*
-	PURPOSE: Removes item with given name from player backpack
-*/
-function removeItem(itemName) {
-	return rummageBackpack(itemName, true);
-}
-
-/*
-    PURPOSE: Iterate through player.backpack, to find if particular item exists
-    SIDE EFFECTS: If REMOVE == true, removes first instance of item from backpack
-*/
-function rummageBackpack(itemName, remove) {
-    var things = player.backpack;
-    for(i = 0; i < things.length; i++){
-        var thingName = things[i].name.toUpperCase();
-        if(thingName == itemName.toUpperCase()) {
-            if(remove) {
-                player.backpack.splice(i, 1);
-            }
-            return true;
-        }
-    }
-    return false;
-}
-
-/*
-    PURPOSE: Iterate through player.backpack, return index of given item
-    --hoping to replace rummageBackpack with this in all cases
-*/
-function containsItem(itemName) {
-    var things = player.backpack;
-    for(i = 0; i < things.length; i++){
-        var thingName = things[i].name.toUpperCase();
-        if(thingName == itemName.toUpperCase()) {
-            return i;
-        }
-    }
-    return -1;
-}
 /*
 	PURPOSE: Create a basic player with starting values for health and sanity
 */
