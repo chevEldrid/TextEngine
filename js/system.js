@@ -1,6 +1,4 @@
 //system.js - functions relating to player actions, player inputs, and background content generation
-
-
 /*
     =========================================================
     |     System Actions - commands and functions           |
@@ -266,98 +264,8 @@ function lootDrop(possibilities, odds, term) {
 		basicEcho('Congradulations! You got a '+givenLoot.name+'!', term);
 	}
 }
-/*
-    =========================================================
-    |     System Variables and Background Functions         |
-    =========================================================
-*/
-//actions for current position, combination of room and sys
-var actions = sysActions;
-//effects for current position, combination of room and sys
-var effects = sysEffects;
-//INPUT VARIABLES
-var command = "";
-var arguments = "";
-//A way to have multi-command prompts with game elements or whatnot
-//Flag to switch from primary prompt behavior
-var hijack = false;
-//the previous action performed in the prompt
-var prevAction = null;
-//for multi-level interactions, a way to keep track of your place
-var promptPos = 0;
-//ENDGAME FUNCTIONALITY
-//for the philospher madlibs
-var philosopherWords = [];
 
-//GAME FUNCTIONS
-/*
-	PURPOSE: Load the currently available actions and effects
-	SIDE EFFECTS: changes the actions and effects variables to reflect current position of player
-*/ 
-function loadRoom(room) {
-    var tempActions = [];
-    var tempEffects = [];
-    for (i = 0; i < sysActions.length; i++) {
-        tempActions.push(sysActions[i]);
-    }
-    for (i = 0; i < room.actions.length; i++) {
-        tempActions.push(room.actions[i]);
-    }
-    //alert(tempActions);
-    actions = tempActions;
-
-    for (i = 0; i < sysEffects.length; i++) {
-        tempEffects.push(sysEffects[i]);
-    }
-    for (i = 0; i < room.effects.length; i++) {
-        tempEffects.push(room.effects[i]);
-    }
-    effects = tempEffects;
-    
-    curRoom = room;
-};
-//basic parsing function
-/*
-	PURPOSE: Parses the input of the user into commands and arguments the program can understand
-	SIDE EFFECTS: changes the value of @Command to current inputted command
-	RETURNS: The extra arguments inputted after command
-*/
-function parseInput(input) {
-	var inputs = input.split(" ");
-	command = inputs[0];
-	inputs.shift();
-	arguments = inputs;
-	var known = false;
-	//
-	for(i = 0; i < (arguments.length + 1) && !known; i++) {
-		for(j = 0; j < actions.length; j++) {
-			if(command.toUpperCase() === actions[j].toUpperCase()) {
-				known = true;
-				
-			}
-		}
-		if(!known) {
-			command = command + " " + arguments[0];
-			arguments.shift();
-		}
-	}
-	return arguments.join(" ");
-};
-
-/*
-	PURPOSE: Cut down on the needless functions that just print to term, given text and term. Prints text to term
-*/
-function basicEcho(text, term) {
-	term.echo(text, {keepWords: true});
-};
-/*
-	PURPOSE: Sets all variables that effect prompt hijacks back to baseline
-	SIDE EFFECTS: sets hijack to false and resets promptPos
-*/
-function endHijack() {
-	hijack = false;
-	promptPos = 0;
-}
+//GAME FUNCTIONS - general purpose methods
 /*
 	PURPOSE: Return a random integer within the supplied range
 */

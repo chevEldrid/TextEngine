@@ -49,12 +49,3 @@ function createKCodeCharacter() {
         health: 100,
     };
 }
-/*
-    =========================================================
-    |     System Variables and Background Functions         |
-    =========================================================
-*/
-//Current Room of Player
-var curRoom = null;
-//Player
-var player = null;
