@@ -1,49 +1,4 @@
-/*
-    ====================================================
-    |       Classes Necessary for Object Creation      |
-    ====================================================
-*/
-
-/*
-    @name:String        		name of Room
-    @desc:String        		description of Room
-    @items:Array<Item>  		items in room
-    @actions:Array<String> 		list of available actions in room
-	@effects:Array<function> 	actions available
-    @enemies:Array<Enemy>		list of enemies in the room
-    ---navigation---
-    @directions:Array<String>   Directions from room to travel
-    @connections:Array<Room>    Rooms connected to directions
-*/
-class Room {
-    constructor(name, desc, items, actions, effects, enemies, directions, connections) {
-        this.name = name;
-        this.desc = desc;
-        this.items = items;
-        this.actions = actions;
-		this.effects = effects;
-        this.enemies = enemies;
-        this.directions = directions;
-        this.connections = connections
-    }
-};
-
-/*
-    @name:String        name of Player
-    @backpack:Array<Item> a list of carried items
-	@sanity:Int			total sanity of player
-	@health:Int			total health of player
-	@equip:Item			Current Item equipped by player to attack
-*/
-class Player {
-    constructor(name, backpack, sanity, health, equip) {
-        this.name = name;
-        this.backpack = backpack;
-		this.sanity = sanity;
-		this.health = health;
-		this.equip = equip;
-    }
-};
+//system.js - functions relating to player actions, player inputs, and background content generation
 
 
 /*
@@ -320,10 +275,6 @@ function lootDrop(possibilities, odds, term) {
 var actions = sysActions;
 //effects for current position, combination of room and sys
 var effects = sysEffects;
-//Current Room of Player
-var curRoom = null;
-//Player
-var player = null;
 //INPUT VARIABLES
 var command = "";
 var arguments = "";
@@ -394,34 +345,6 @@ function parseInput(input) {
 };
 
 /*
-	PURPOSE: Create a basic player with starting values for health and sanity
-*/
-function createCharacter(playerName) {
-	player = {
-		name: playerName,
-		backpack: [],
-		sanity: 50,
-		health: 50
-	};
-};
-
-function createTemplateCharacter() {
-	player = {
-		name: 'Nobody',
-		backpack: [],
-		sanity: 50,
-		health: 50
-	};
-};
-function createKCodeCharacter() {
-    player = {
-        name: 'Hax0r',
-        backpack: [mysteryMeat(), milk(), calamari(), babyOctopus()],
-        sanity: 100,
-        health: 100,
-    };
-}
-/*
 	PURPOSE: Cut down on the needless functions that just print to term, given text and term. Prints text to term
 */
 function basicEcho(text, term) {
@@ -462,12 +385,4 @@ function getAttackStrength() {
 		totalPower = getRandomInt(baseStrength, Math.ceil(baseStrength * 1.2));
 	}
 	return totalPower;
-}
-/*
-    PURPOSE: To connect rooms at runtime and not throw super errors
-*/
-function loadRoomConnections() {
-    yourApartment.connections = [corridor];
-	corridor.connections = [yourApartment, corridor2];
-	corridor2.connections = [corridor];
 }
