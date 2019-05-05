@@ -49,9 +49,8 @@ class Player {
             return 1;
         }  
     }
-    //PURPOSE: Checks if backpack contains a particular item, returns index
-    hasItem(item) {
-        let itemName = item.name
+    //PURPOSE: Checks if backpack contains a particular item name, returns index
+    hasItem(itemName) {
         for(i = 0; i < this.backpack.length; i++) {
             if(this.backpack[i].name.toUpperCase() === itemName.toUpperCase()) {
                 return i;
@@ -70,7 +69,7 @@ class Player {
         SIDE EFFECTS: If item found, removed from backpack
     */
     removeItem(item) {
-       let index = this.hasItem(item);
+       let index = this.hasItem(item.name);
         if(index > -1) {
             this.backpack.splice(index, 1);
         }

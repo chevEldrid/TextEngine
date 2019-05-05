@@ -1,13 +1,20 @@
 //system.js - functions relating to player actions, player inputs, and background content generation
 /*
     =========================================================
-    |     System Actions - commands and functions           |
+    |     Global Actions - commands and functions           |
     =========================================================
 */
+//SCOPE: Global - actions that are available while player is roaming around
 //list of available commands on a system level
 var sysActions = ['survey', 'help', 'about', 'stats', 'inspect', 'use', 'drop', 'go', 'equip', 'attack'];
 //parallel array for running the commands of the above list
 var sysEffects = [survey, help, about, stats, inspect, use, drop, go, equip, attack];
+
+//SCOPE: Shop - actions available while player is in a shop
+var shopActions = ['buy', 'sell', 'leave', 'help'];
+//parallel array for running the commands in the above list
+var shopEffects = [buyItem, sellItem, leaveShop, help];
+
 //the actual code for the effects
 /*
 	PURPOSE: Repeats the description of the room, as if the Player is surveying it.
@@ -29,11 +36,15 @@ function survey(term) {
 	PURPOSE: To list all available commands in the current room to the Player
 */
 function help(term) {
-    term.echo('possible commands at this point are: ', {keepWords: true});
-    for(i = 0; i < actions.length; i++) {
+	basicEcho('possible commands at this point are: ', term);
+	var availActions = actions;
+	if(scope === 'shop') {
+		availActions = shopActions;
+	}
+    for(i = 0; i < availActions.length; i++) {
         //just for the sake of flowy-ness - prevents 'Start' from being listed as a valid command going forward
-		if(actions[i] != 'start') {
-			term.echo(actions[i], {keepWords: true});
+		if(availActions[i] != 'start') {
+			basicEcho(availActions[i], term);
 		}
     }
     term.echo('For further assistance please refer to included documentation or press buttons until something happens.', {keepWords: true});
@@ -248,7 +259,11 @@ function lootDrop(possibilities, odds, term) {
 }
 
 //GAME FUNCTIONS - general purpose methods
-
+/*
+    =========================================================
+    |     	Shop Actions - commands and functions           |
+    =========================================================
+*/
 //PURPOSE: Generate Shop Interface
 function buildShop(wares, term) {
 	let interfaceWidth = 28;
@@ -283,17 +298,50 @@ function shopContains(input, wares) {
 };
 
 //PURPOSE: Purchases good from store
-function shopPurchase(ware, term) {
-	if(ware[1] <= player.money) {
-		player.addItem(ware[0]);
-		player.money -= ware[1];
-		basicEcho('You receive '+ware[0].name, term);		
+function buyItem(term, args) {
+	var itemIndex = shopContains(args, curShopWares);
+	if(itemIndex > -1) {
+		var ware = curShopWares[itemIndex];
+		if(ware[1] <= player.money) {
+			player.addItem(ware[0]);
+			player.money -= ware[1];
+			basicEcho('You receive '+ware[0].name, term);		
+		}
+		else {
+			basicEcho("You can't afford that!", term);
+		}
+		basicEcho('"Anything else I can help you with?"', term);
+		return 0;
 	}
-	else {
-		basicEcho("You can't afford that!", term);
+	basicEcho('"We don\'t carry that, try again!"', term);
+};
+
+//PURPOSE: Sells item from backpack for item value. 
+//WARNING: Current implementation does not support buy-backs, but does support un-sellable items
+function sellItem(term, args) {
+	var itemIndex = player.hasItem(args);
+	if(itemIndex > -1) {
+		var curItem = player.backpack[itemIndex];
+		if(curItem.value > 0) { //prevent selling of key items - make value below 0
+			basicEcho(("You sold a " + curItem.name + " for $" + curItem.value), term);
+			player.money += curItem.value;
+			player.removeItem(curItem);
+		}
+		else {
+			basicEcho("You can\'t sell that!", term);
+		}
+		basicEcho('"Anything else I can help you with?"', term);
+	} else {
+		basicEcho("You don\'t have one of those to sell!", term);
 	}
-	basicEcho('"Anything else I can help you with?"', term);
-}
+};
+
+//PURPOSE: Returns game to global scope and exits the shop
+function leaveShop(term) {
+	basicEcho("You leave the shop", term);
+	scope = 'global';
+	curShopWares = [];
+};
 
 /*
 	PURPOSE: Return a random integer within the supplied range

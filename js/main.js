@@ -23,6 +23,11 @@ var promptPos = 0;
 var player = null;
 //current room of player
 var curRoom = null;
+//current scope of player
+var scope = 'global'; //can be 'global' or 'shop'
+
+//NOT A GOOD SOLUTION!! FIND A BETTER ONE!
+var curShopWares = [];
 
 /*
     =========================================================
@@ -66,10 +71,15 @@ function parseInput(input) {
 	inputs.shift();
 	arguments = inputs;
 	var known = false;
+	var availActions = actions;
+	//new scope code - change which functions we're looking at depending on the scope
+	if(scope === 'shop') {
+		availActions = shopActions
+	}
 	//
 	for(i = 0; i < (arguments.length + 1) && !known; i++) {
-		for(j = 0; j < actions.length; j++) {
-			if(command.toUpperCase() === actions[j].toUpperCase()) {
+		for(j = 0; j < availActions.length; j++) {
+			if(command.toUpperCase() === availActions[j].toUpperCase()) {
 				known = true;
 			}
 		}
@@ -121,18 +131,24 @@ jQuery(document).ready(function($) {
 			//"If you're currently not dead..."
 			if(player.health > 0) {
 				//"If you are currently not in the middle of doing something else..."
+				var availActions = actions;
+				var availEffects = effects;
+				if(scope === 'shop') {
+					availActions = shopActions;
+					availEffects = shopEffects;
+				}
 				if(!hijack) {
 					//TO PUT SOME SPACE IN THE TERMINAL AND BREAK IT UP A LITTLE
 					this.echo(' ');
 					//calls parsing function
 					var args = parseInput(input);
 					var known = false;
-					for(i = 0; i < actions.length; i++) {
-						if(command.toUpperCase() === actions[i].toUpperCase()) {
+					for(i = 0; i < availActions.length; i++) {
+						if(command.toUpperCase() === availActions[i].toUpperCase()) {
 							known = true;
-							prevAction = effects[i];
+							prevAction = availEffects[i];
 							//this.echo('previous action is: ' + actions[i]);
-							effects[i](this, args);
+							availEffects[i](this, args);
 							//storing previous command for potential hijack
 							break;
 						}

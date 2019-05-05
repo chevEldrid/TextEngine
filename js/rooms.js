@@ -100,27 +100,10 @@ function talkPasserby(term) {
 //Let's try and build a store...
 function openShop(term, args) {
     var wares = [[moldySandwich(), 5], [calamari(), 10]];
-    var cmd = args.toUpperCase();
-	if(promptPos == 0) {
-		hijack = true;
-		basicEcho('"How-how did you see me? No matter, welcome to the best shop you\'re going to find out here. Browse my wares? Type either the name of the good you want to buy or type \'leave\' to exit the shop and continue on your travels"', term);
-		buildShop(wares, term);
-        promptPos += 1;
-	}
-	else if(promptPos == 1) {
-        var itemIndex = shopContains(cmd, wares);
-		if(cmd == 'LEAVE'){
-			basicEcho('Thanks for stopping by!', term);
-			endHijack();
-		}
-		else if(itemIndex > -1) {
-            shopPurchase(wares[itemIndex], term);
-		}
-		else {
-			basicEcho('"Whoah I don\'t think we\'ve ever stocked that...Or if we did it was with different capitalization', term);
-            basicEcho('"Anything else I can help you with? Type \'leave\' to exit the store"', term);
-		}
-	}
+    scope = 'shop';
+    curShopWares = wares;
+    basicEcho('"How-how did you see me? No matter, welcome to the best shop you\'re going to find out here. Browse my wares? Type either the name of the good you want to buy or type \'leave\' to exit the shop and continue on your travels"', term);
+    buildShop(wares, term);
 };
 
 // ||Room 3 - Down the Street||
