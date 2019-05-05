@@ -49,22 +49,7 @@ function about(term) {
 	PURPOSE: Lists the current player statistics relevant to advancement
 */
 function stats(term) {
-	term.echo('CURRENT STATS FOR: ' + player.name +'\n SANITY: ' + player.sanity + '\n HEALTH: ' + player.health + '\n BACKPACK CONTAINS: ', {keepWords: true});
-	if(player.backpack.length < 1) {
-		term.echo('  nothing', {keepWords: true});
-	}
-	else {
-		for(i = 0; i < player.backpack.length; i++) {
-			term.echo('  ' + player.backpack[i].name);
-		}
-	}
-	term.echo('------');
-	if(player.equip){
-		term.echo(player.equip.name + ' is currently equipped');
-    }
-    else{
-        basicEcho('You currently have no weapon equipped', term);
-    }
+	basicEcho(player.playerStats(), term);
 };
 /*
 	Purpose: general tutor for items in an array using 3-case system, returns index of found thing
@@ -110,10 +95,11 @@ function inspect(term, args) {
 	var r2 = 'You see: ';
 	var index = tutor(term, args, things, r1, r2);
 	if(index > -1) {
-		basicEcho(things[index].desc, term);
-		if(things[index].takeable) {
-			basicEcho('You put the ' + things[index].name + ' into your bag for later.', term);
-			player.backpack.push(things[index]);
+		let curItem = things[index];
+		basicEcho(curItem.desc, term);
+		if(curItem.takeable) {
+			basicEcho('You put the ' + curItem.name + ' into your bag for later.', term);
+			player.addItem(curItem);
 			things.splice(index, 1);
 		}
 	}
@@ -137,7 +123,7 @@ function use(term, args) {
                 curItem.use(term);
                 curItem.durability--;
                 if(curItem.durability <= 0){
-                    player.backpack.splice(index, 1);
+					player.removeItem(curItem);
                 }
             }
             else{
@@ -162,7 +148,8 @@ function drop(term, args) {
 	var index = tutor(term, args, things, r1, r2);
 	if(index > -1) {
 		var curItem = things[index];
-        things.splice(index, 1);
+		//things.splice(index, 1);
+		player.removeItem(curItem);
         //attempt to drop item into room you're in
         curRoom.items.push(curItem)
         basicEcho('You dropped '+curItem.name+' from your backpack, hope you don\'t need it!', term);
@@ -206,7 +193,7 @@ function equip(term, args) {
             term.echo('You already have that equipped!');
         }
         else {
-            player.equip = curItem;
+            player.equipWeapon(curItem);
             term.echo('You equipped the '+curItem.name);
         }				
 	}
@@ -220,37 +207,32 @@ function attack(term, args) {
 	var roomEnemies = curRoom.enemies;
 	var r1 = 'There\'s nothing worth fighting here...';
 	var r2 = 'You scan the area and see: ';
-	if(player.equip) {
-		var index = tutor(term, args, roomEnemies, r1, r2);
-		if(index > -1) {
-			var thisEnemy = roomEnemies[index];
-			//strength of weapon + modifier based on player's sanity
-			var attackPower = getAttackStrength();
-			term.echo('You attacked the '+thisEnemy.name+' for '+attackPower+' damage!');
-			term.echo('The '+thisEnemy.name+' attacked you for '+thisEnemy.attack+' damage!');				
-			thisEnemy.health -= attackPower;
-			player.health -= thisEnemy.attack;
-			if(thisEnemy.health <= 0){
-				term.echo('You killed the '+thisEnemy.name+'!');
-				roomEnemies.splice(i,1);
-				//basic loot-dropping action...
-				if(thisEnemy.loot) {
-					//special case for if loot required
-					if(thisEnemy.isReq) {
-						lootDrop(thisEnemy.loot, 1, term);
-					}
-					else {
-						lootDrop(thisEnemy.loot, 2, term);
-					}							
+	var index = tutor(term, args, roomEnemies, r1, r2);
+	if(index > -1) {
+		var thisEnemy = roomEnemies[index];
+		//strength of weapon + modifier based on player's sanity
+		var attackPower = player.getAttackStrength();
+		term.echo('You attacked the '+thisEnemy.name+' for '+attackPower+' damage!');
+		term.echo('The '+thisEnemy.name+' attacked you for '+thisEnemy.attack+' damage!');				
+		thisEnemy.health -= attackPower;
+		player.health -= thisEnemy.attack;
+		if(thisEnemy.health <= 0){
+			term.echo('You killed the '+thisEnemy.name+'!');
+			roomEnemies.splice(i,1);
+			//basic loot-dropping action...
+			if(thisEnemy.loot) {
+				//special case for if loot required
+				if(thisEnemy.isReq) {
+					lootDrop(thisEnemy.loot, 1, term);
 				}
+				else {
+					lootDrop(thisEnemy.loot, 2, term);
+				}							
 			}
 		}
-		else if(index > -2) {	
-			term.echo('There are no enemies by that name here');	
-		}
 	}
-	else {
-		term.echo('You don\'t have a weapon equipped!');
+	else if(index > -2) {	
+		term.echo('There are no enemies by that name here');	
 	}
 };
 //given an array of possible loot options from enemy, and odds of drop returns a loot if odds met
@@ -266,6 +248,53 @@ function lootDrop(possibilities, odds, term) {
 }
 
 //GAME FUNCTIONS - general purpose methods
+
+//PURPOSE: Generate Shop Interface
+function buildShop(wares, term) {
+	let interfaceWidth = 28;
+	for(i = 0; i < wares.length; i++) {
+		var spacing = "";
+		var nameLength = wares[i][0].name.length;
+		for(j = 0; j < (interfaceWidth - nameLength); j++) {
+			spacing += "-";
+		}
+		basicEcho((wares[i][0].name + spacing + "$"+ wares[i][1]), term);
+	}
+};
+
+//PURPOSE: See if Shop contains given input
+function shopContains(input, wares) {
+	var inputs = input.split(" ");
+	shopItem = inputs[0];
+	inputs.shift();
+	rest = inputs;
+	restLength = rest.length;
+	for(i = 0; i < (restLength + 1); i++) {
+		for(j = 0; j < wares.length; j++) {
+			var ware = wares[j][0];
+			if(shopItem.toUpperCase() === ware.name.toUpperCase()) {
+				return j;
+			}
+		}
+		shopItem = shopItem + " " + rest[0];
+		rest.shift();
+	}
+	return -1;
+};
+
+//PURPOSE: Purchases good from store
+function shopPurchase(ware, term) {
+	if(ware[1] <= player.money) {
+		player.addItem(ware[0]);
+		player.money -= ware[1];
+		basicEcho('You receive '+ware[0].name, term);		
+	}
+	else {
+		basicEcho("You can't afford that!", term);
+	}
+	basicEcho('"Anything else I can help you with?"', term);
+}
+
 /*
 	PURPOSE: Return a random integer within the supplied range
 */
@@ -274,23 +303,4 @@ function getRandomInt(min, max) {
 	max = Math.floor(max);
 	return Math.round(Math.random() * (max - min)) + min;
 };
-/*
-	PURPOSE: Adds modifier to attack based on player's current sanity
-*/
-function getAttackStrength() {
-	var sanity = player.sanity;
-	var baseStrength = player.equip.strength;
-	var totalPower = 0;
-	if(sanity < 30) {
-		totalPower = getRandomInt(Math.floor(baseStrength * 0.5), baseStrength);
-	}
-	else if(sanity < 60){
-		totalPower = getRandomInt(Math.floor(baseStrength * 0.7), baseStrength);
-	}
-	else if(sanity < 99){
-		totalPower = baseStrength;
-	}else {
-		totalPower = getRandomInt(baseStrength, Math.ceil(baseStrength * 1.2));
-	}
-	return totalPower;
-}
+

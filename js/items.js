@@ -7,9 +7,10 @@
 	@durability:int     how many times item can be used before breaking
 	@weapon:bool		is this item a weapon/can be used to attack
 	@strength:int		if item is weapon, its attack strength
+	@value:Int			value of item in game currency
 */
 class Item {
-    constructor(name, desc, takeable, cond, use, durability, isWeapon, strength) {
+    constructor(name, desc, takeable, cond, use, durability, isWeapon, strength, value) {
         this.name = name;
         this.desc = desc;
         this.takeable = takeable;
@@ -18,6 +19,7 @@ class Item {
 		this.durability = durability;
 		this.isWeapon = isWeapon;
 		this.strength = strength;
+		this.value = value;
     }
 };
 /*
@@ -45,13 +47,15 @@ class Enemy {
 
 function moldySandwich(){
 	return new Item('Moldy Sandwich', 
-	'A sandwich that has most definitely seen better days',
-	true,
-	function(){return (player.health <= 95);},
-	function(term){player.health+=5;player.sanity-=5;basicEcho('You eat it...but you hate yourself for it', term);},
-	1,
-	false,
-	0);
+		'A sandwich that has most definitely seen better days',
+		true,
+		function(){return (player.health <= 95);},
+		function(term){player.health+=5;player.sanity-=5;basicEcho('You eat it...but you hate yourself for it', term);},
+		1,
+		false,
+		0,
+		1
+	);
 }
 
 function calamari(){
@@ -63,7 +67,9 @@ function calamari(){
 		function(term){player.health+=20;player.sanity+=20;basicEcho('It brings you some kind of weird pleasure to eat the cousins of the opressors. You\'re a little sick', term);},
 		1,
 		false,
-		0);
+		0,
+		5
+	);
 }
 
 /* =============================
@@ -80,6 +86,7 @@ function oldSword(){
 		function(term) {},
 		0,
 		true,
+		5,
 		5
 	);
 }

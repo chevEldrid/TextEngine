@@ -71,7 +71,6 @@ function parseInput(input) {
 		for(j = 0; j < actions.length; j++) {
 			if(command.toUpperCase() === actions[j].toUpperCase()) {
 				known = true;
-				
 			}
 		}
 		if(!known) {
@@ -107,10 +106,10 @@ function endHijack() {
 jQuery(document).ready(function($) {
 	//GAME INITIALIZERS
 	//loads starting room
-    loadRoom(yourApartment);
+    loadRoom(corridor2);
     //loadRoom(cathedral);
 	//Creates a generic character
-    createTemplateCharacter();
+    player = createTemplateCharacter();
     //createKCodeCharacter();
 	//loads room connections
 	loadRoomConnections();
@@ -131,9 +130,10 @@ jQuery(document).ready(function($) {
 					for(i = 0; i < actions.length; i++) {
 						if(command.toUpperCase() === actions[i].toUpperCase()) {
 							known = true;
+							prevAction = effects[i];
+							//this.echo('previous action is: ' + actions[i]);
 							effects[i](this, args);
 							//storing previous command for potential hijack
-							prevAction = effects[i];
 							break;
 						}
 					}
@@ -142,6 +142,7 @@ jQuery(document).ready(function($) {
 					}
 				}
 				else {
+					//this.echo('triggered');
 					prevAction(this, input);
 				}
 			}

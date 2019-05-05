@@ -47,7 +47,7 @@ function startGame(term, args) {
 	}
 	//loads initial content and displays room information
 	else if(promptPos == 1) {
-		createCharacter(args);
+		player = createCharacter(args);
 		basicEcho('"' + args +' is it? Nice to meet you '+args+'. At this point, your simulation shall begin. Or type \'start\' again to reset."', term);
 		basicEcho('', term);
 		basicEcho(curRoom.desc, term);
@@ -97,14 +97,39 @@ function talkPasserby(term) {
 	player.backpack.push(calamari());
 	basicEcho('You recieved CALAMARI', term);
 }
+//Let's try and build a store...
+function openShop(term, args) {
+    var wares = [[moldySandwich(), 5], [calamari(), 10]];
+    var cmd = args.toUpperCase();
+	if(promptPos == 0) {
+		hijack = true;
+		basicEcho('"How-how did you see me? No matter, welcome to the best shop you\'re going to find out here. Browse my wares? Type either the name of the good you want to buy or type \'leave\' to exit the shop and continue on your travels"', term);
+		buildShop(wares, term);
+        promptPos += 1;
+	}
+	else if(promptPos == 1) {
+        var itemIndex = shopContains(cmd, wares);
+		if(cmd == 'LEAVE'){
+			basicEcho('Thanks for stopping by!', term);
+			endHijack();
+		}
+		else if(itemIndex > -1) {
+            shopPurchase(wares[itemIndex], term);
+		}
+		else {
+			basicEcho('"Whoah I don\'t think we\'ve ever stocked that...Or if we did it was with different capitalization', term);
+            basicEcho('"Anything else I can help you with? Type \'leave\' to exit the store"', term);
+		}
+	}
+};
 
 // ||Room 3 - Down the Street||
 var corridor2 = {
 	name: 'Ellis Ave South',
 	desc: 'Where a proud and noble fast foot restaurant once stood-now only charred bricks remain. The Oktopi care not for fillet o\' fish. A passerby gawks.',
 	items: [],
-	actions:['talk to passerby'],
-	effects:[talkPasserby],
+	actions:['talk to passerby', 'shop'],
+	effects:[talkPasserby, openShop],
 	directions:['north'],
 	connections:[corridor],
 	enemies: [tentacle()]
