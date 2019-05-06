@@ -28,6 +28,8 @@ var scope = 'global'; //can be 'global' or 'shop'
 
 //NOT A GOOD SOLUTION!! FIND A BETTER ONE!
 var curShopWares = [];
+//Attempt to remove the need for "term" everywhere
+var thisTerm = null;
 
 /*
     =========================================================
@@ -94,8 +96,8 @@ function parseInput(input) {
 /*
 	PURPOSE: Cut down on the needless functions that just print to term, given text and term. Prints text to term
 */
-function basicEcho(text, term) {
-	term.echo(text, {keepWords: true});
+function basicEcho(text) {
+	thisTerm.echo(text, {keepWords: true});
 };
 /*
 	PURPOSE: Sets all variables that effect prompt hijacks back to baseline
@@ -128,6 +130,7 @@ jQuery(document).ready(function($) {
     } else {
 		//this holds the interpreter function...where we figure out what to do with the text
 		$('#term').terminal(function(input) {
+			thisTerm = this;
 			//"If you're currently not dead..."
 			if(player.health > 0) {
 				//"If you are currently not in the middle of doing something else..."
@@ -139,7 +142,7 @@ jQuery(document).ready(function($) {
 				}
 				if(!hijack) {
 					//TO PUT SOME SPACE IN THE TERMINAL AND BREAK IT UP A LITTLE
-					this.echo(' ');
+					basicEcho(' ');
 					//calls parsing function
 					var args = parseInput(input);
 					var known = false;
@@ -148,13 +151,13 @@ jQuery(document).ready(function($) {
 							known = true;
 							prevAction = availEffects[i];
 							//this.echo('previous action is: ' + actions[i]);
-							availEffects[i](this, args);
+							availEffects[i](args);
 							//storing previous command for potential hijack
 							break;
 						}
 					}
 					if(!known) {
-						this.echo('unknown command, if you\'re stuck, type "help" for options!', {keepWords: true});
+						basicEcho('unknown command, if you\'re stuck, type "help" for options!');
 					}
 				}
 				else {
@@ -163,7 +166,7 @@ jQuery(document).ready(function($) {
 				}
 			}
 			else {
-				this.echo('Well, you\'re dead. That kinda blows. Press [F5] to try again!', {keepWords: true});
+				basicEcho('Well, you\'re dead. That kinda blows. Press [F5] to try again!');
 			}
 		}, {
 		//this is the second: descriptors

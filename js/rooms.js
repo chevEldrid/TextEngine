@@ -39,24 +39,24 @@ class Room {
 /*
 	Easy way to do an intro text if you want the player to start somewhere- make it a function of that room
 */
-function startGame(term, args) {
+function startGame(args) {
 	if(promptPos == 0) {
 		hijack = true;
-		basicEcho('"Welcome test subject 001. I hope your accomodations have been nice. What\'s your name?', term);
+		basicEcho('"Welcome test subject 001. I hope your accomodations have been nice. What\'s your name?');
 		promptPos += 1;
 	}
 	//loads initial content and displays room information
 	else if(promptPos == 1) {
 		player = createCharacter(args);
-		basicEcho('"' + args +' is it? Nice to meet you '+args+'. At this point, your simulation shall begin. Or type \'start\' again to reset."', term);
-		basicEcho('', term);
-		basicEcho(curRoom.desc, term);
+		basicEcho('"' + args +' is it? Nice to meet you '+args+'. At this point, your simulation shall begin. Or type \'start\' again to reset."');
+		basicEcho('');
+		basicEcho(curRoom.desc);
 		endHijack();
 	}
 };
 //function for action associated with command 'eat cereal'
-function eatCereal(term) {
-	basicEcho('You take a helping of cereal and consume the cereal saying "Mmmm, cereal"', term);
+function eatCereal() {
+	basicEcho('You take a helping of cereal and consume the cereal saying "Mmmm, cereal"');
 };
 
 //The Apartment itself
@@ -92,18 +92,18 @@ var corridor = {
 	enemies:[tentacle()]
 };
 //unlimited calamari - this is on purpose
-function talkPasserby(term) {
-	basicEcho('"Woah, who ever knew the Calamari would strike back. Do you want some?"', term);
+function talkPasserby() {
+	basicEcho('"Woah, who ever knew the Calamari would strike back. Do you want some?"');
 	player.backpack.push(calamari());
-	basicEcho('You recieved CALAMARI', term);
+	basicEcho('You recieved CALAMARI');
 }
 //Let's try and build a store...
-function openShop(term, args) {
+function openShop() {
     var wares = [[moldySandwich(), 5], [calamari(), 10]];
     scope = 'shop';
     curShopWares = wares;
-    basicEcho('"How-how did you see me? No matter, welcome to the best shop you\'re going to find out here. Browse my wares? Type either the name of the good you want to buy or type \'leave\' to exit the shop and continue on your travels"', term);
-    buildShop(wares, term);
+    basicEcho('"How-how did you see me? No matter, welcome to the best shop you\'re going to find out here. Browse my wares? Type either the name of the good you want to buy or type \'leave\' to exit the shop and continue on your travels"');
+    buildShop(wares);
 };
 
 // ||Room 3 - Down the Street||
