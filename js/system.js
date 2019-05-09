@@ -55,6 +55,7 @@ function help() {
 function about() {
     basicEcho('Welcome to "Testing Chamber", A Text-Adventure surrounding nothing...');
     basicEcho('VER: 1.1  DATE: May 2019');
+    setGraphic("city.gif");
 };
 /*
 	PURPOSE: Lists the current player statistics relevant to advancement

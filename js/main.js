@@ -107,6 +107,16 @@ function endHijack() {
 	hijack = false;
 	promptPos = 0;
 };
+/*
+    =========================================================
+    |     	  	      Image Manipulation       			    |
+    =========================================================
+*/
+
+function setGraphic(imgPath) {
+	$("#graphic").attr("src", imgPath);
+	//alert("Should have worked...");
+};
 
 /*
     =========================================================
