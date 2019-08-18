@@ -128,7 +128,7 @@ function setGraphic(imgPath) {
 jQuery(document).ready(function($) {
 	//GAME INITIALIZERS
 	//loads starting room
-    loadRoom(corridor2);
+    loadRoom(yourApartment);
     //loadRoom(cathedral);
 	//Creates a generic character
     player = createTemplateCharacter();
@@ -171,8 +171,9 @@ jQuery(document).ready(function($) {
 					}
 				}
 				else {
+					console.log(input);
 					//this.echo('triggered');
-					prevAction(this, input);
+					prevAction(input);
 				}
 			}
 			else {
