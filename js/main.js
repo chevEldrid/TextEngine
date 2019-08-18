@@ -171,8 +171,6 @@ jQuery(document).ready(function($) {
 					}
 				}
 				else {
-					console.log(input);
-					//this.echo('triggered');
 					prevAction(input);
 				}
 			}
